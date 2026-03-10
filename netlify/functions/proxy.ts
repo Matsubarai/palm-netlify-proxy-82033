@@ -19,6 +19,10 @@ const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-headers": "*",
 };
 
+// 代理到 Google PaLM/Gemini 的超时时间（毫秒）
+// 设置为 10 分钟，避免长时间生成时过早中断
+const UPSTREAM_TIMEOUT_MS = 10 * 60 * 1000;
+
 export default async (request: Request, context: Context) => {
 
   if (request.method === "OPTIONS") {
@@ -38,13 +42,13 @@ export default async (request: Request, context: Context) => {
 </head>
 <body>
   <h1 id="google-palm-api-proxy-on-netlify-edge">Google PaLM API proxy on Netlify Edge</h1>
-  <p>Tips: This project uses a reverse proxy to solve problems such as location restrictions in Google APIs. </p>
-  <p>If you have any of the following requirements, you may need the support of this project.</p>
+  <p>Tips: This project uses a reverse proxy to solve problems such as location restrictions in Google APIs. </p >
+  <p>If you have any of the following requirements, you may need the support of this project.</p >
   <ol>
   <li>When you see the error message &quot;User location is not supported for the API use&quot; when calling the Google PaLM API</li>
   <li>You want to customize the Google PaLM API</li>
   </ol>
-  <p>For technical discussions, please visit <a href="https://simonmy.com/posts/google-palm-api-proxy-on-netlify-edge.html">https://simonmy.com/posts/google-palm-api-proxy-on-netlify-edge.html</a></p>
+  <p>For technical discussions, please visit <a href=" ">https://simonmy.com/posts/google-palm-api-proxy-on-netlify-edge.html</a ></p >
 </body>
 </html>
     `
@@ -69,7 +73,9 @@ export default async (request: Request, context: Context) => {
     body: request.body,
     method: request.method,
     headers,
-    duplex: "half"
+    duplex: "half",
+    // 使用 AbortSignal.timeout 控制上游超时时间（10 分钟）
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   });
 
   const responseHeaders = {
